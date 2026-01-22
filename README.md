@@ -1,3 +1,3 @@
 # goclaude
 
-Sharing Claude Code related skills and tools.
+Claude Code related skills and tools.
