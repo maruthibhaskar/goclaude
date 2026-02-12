@@ -5,32 +5,18 @@ Save compact session summary with pending todos for resuming work in new convers
 
 ## When to Use
 - User says "sesssave" - generate/update session summary file
+- Session name derived from workspace (no user input needed)
 
 ---
 
 ## Execution Steps
 
 ### 1. Get Workspace Name
-Determine workspace name from current directory. Options:
-
-**Option A**: If `bin/get-workspace` tool is available:
+Use the `get-workspace` tool to determine workspace name:
 ```bash
 workspace_name=$(bin/get-workspace)
 ```
-
-**Option B**: Manual detection (find `.procompact` marker in parent tree):
-```bash
-current_dir="$(pwd)"
-while [[ "$current_dir" != "/" ]]; do
-    if [[ -d "$current_dir/.procompact" ]]; then
-        workspace_name=$(basename "$current_dir")
-        break
-    fi
-    current_dir=$(dirname "$current_dir")
-done
-```
-
-If no `.procompact` directory found, error: "Not in workspace"
+This will be used as the session identifier (no session name parameter needed).
 
 ### 2. Get All Todos
 Query TodoWrite tool for all todos:
@@ -45,21 +31,14 @@ Infer from context using this priority:
 **Never interactively ask user for goal.**
 
 ### 4. Write Summary File
-Generate filename: `{workspace-name}-{YYYYMMDD-HHMMSS}.json`
-
-**Option A**: If `bin/get-session-filename` tool is available:
+Get filename from `get-session-filename` tool:
 ```bash
 filename=$(bin/get-session-filename)
+filepath=".procompact/$filename"
 ```
+File format: `{workspace-name}-{YYYYMMDD-HHMMSS}.json`
 
-**Option B**: Manual generation:
-```bash
-timestamp=$(date +"%Y%m%d-%H%M%S")
-filename="${workspace_name}-${timestamp}.json"
-```
-
-Write to `.procompact/$filename` with JSON session data:
-
+Write JSON with session data:
 ```json
 {
   "workspace": "{workspace_name}",
@@ -108,9 +87,9 @@ Write to `.procompact/$filename` with JSON session data:
 
 **Key principles**:
 - Pending todos include full context for resumption
-- Session Summary captures narrative arc and decisions (helps bypass autocompaction)
+- Session summary captures narrative arc and decisions
 - Completed work provides closure and context
-- 500 word limit for summary section keeps it focused
+- 500 word limit keeps summary focused
 - All information embedded for standalone resumption
 
 ### 5. No Cleanup Required
@@ -136,14 +115,6 @@ To resume: Start new session, say "sessload"
 
 ## Error Handling
 
-- **Not in workspace**: No `.procompact` directory found - inform user
+- **Not in workspace**: `get-workspace` returns error - inform user
 - **No pending todos**: Save file anyway with empty pending_todos array
 - **File write fails**: Report error with path
-
-## Tool Support
-
-This command works with optional helper tools in `bin/`:
-- `get-workspace` - Auto-detect workspace name
-- `get-session-filename` - Generate standardized filename
-
-If tools not available, use manual detection methods shown above.
