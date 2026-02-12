@@ -1,0 +1,19 @@
+#!/bin/bash
+# Generate session filename for current workspace
+# Format: {workspace-name}-{YYYYMMDD-HHMMSS}.json
+
+# Find bin directory relative to script location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Get workspace name
+workspace_name=$("$SCRIPT_DIR/get-workspace")
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+# Generate timestamp (local timezone)
+timestamp=$(date +"%Y%m%d-%H%M%S")
+
+# Return filename
+echo "${workspace_name}-${timestamp}.json"
+exit 0

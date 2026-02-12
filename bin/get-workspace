@@ -1,0 +1,19 @@
+#!/bin/bash
+# Get workspace name from current directory
+# Convention: Workspace root is identified by .procompact directory
+
+cwd="$(pwd)"
+
+# Walk up directory tree to find .procompact directory
+current_dir="$cwd"
+while [[ "$current_dir" != "/" ]]; do
+    if [[ -d "$current_dir/.procompact" ]]; then
+        workspace_name=$(basename "$current_dir")
+        echo "$workspace_name"
+        exit 0
+    fi
+    current_dir=$(dirname "$current_dir")
+done
+
+echo "Error: Not in workspace (no .procompact directory found in parent tree)" >&2
+exit 1

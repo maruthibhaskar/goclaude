@@ -1,0 +1,50 @@
+#!/bin/bash
+# Get path to most recent session file for current workspace
+# Returns: .procompact/{workspace-name}-{latest-timestamp}.json
+
+# Find bin directory relative to script location
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Get workspace name
+workspace_name=$("$SCRIPT_DIR/get-workspace")
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+# Find workspace root (directory containing .procompact)
+cwd="$(pwd)"
+current_dir="$cwd"
+workspace_root=""
+
+while [[ "$current_dir" != "/" ]]; do
+    if [[ -d "$current_dir/.procompact" ]]; then
+        workspace_root="$current_dir"
+        break
+    fi
+    current_dir=$(dirname "$current_dir")
+done
+
+if [[ -z "$workspace_root" ]]; then
+    echo "Error: Workspace root not found" >&2
+    exit 1
+fi
+
+procompact_dir="$workspace_root/.procompact"
+
+# Check if .procompact exists
+if [[ ! -d "$procompact_dir" ]]; then
+    echo "Error: No .procompact directory found" >&2
+    exit 2
+fi
+
+# Find latest session file matching {workspace-name}-*.json
+latest_file=$(ls -1 "$procompact_dir/${workspace_name}"-*.json 2>/dev/null | sort -r | head -n 1)
+
+if [[ -z "$latest_file" ]]; then
+    echo "Error: No session files found for workspace '$workspace_name'" >&2
+    exit 2
+fi
+
+# Return relative path from workspace root
+echo "${latest_file#$workspace_root/}"
+exit 0
